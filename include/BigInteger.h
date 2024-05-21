@@ -2,8 +2,6 @@
 #define BIGINTEGER_BIGINTEGER_H
 #define MAX 100000
 
-using namespace std;
-
 class BigInteger {
     int _number_array[MAX]{};
     bool _positive{};
@@ -85,9 +83,9 @@ public:
 
     BigInteger operator^(int number) const;
 
-    friend ostream &operator<<(ostream &out, const BigInteger &big_int);
+    friend std::ostream &operator<<(std::ostream &out, const BigInteger &big_int);
 
-    friend istream &operator>>(istream &in, BigInteger &big_int);
+    friend std::istream &operator>>(std::istream &in, BigInteger &big_int);
 
 private:
     /**      ~Helper Methods~      **/

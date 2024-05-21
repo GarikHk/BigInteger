@@ -121,43 +121,43 @@ bool BigInteger::operator==(const BigInteger &big_int) const {
 }
 
 bool BigInteger::operator!=(int number) const {
-    return !_equals_integer(*this, number);
+    return !(*this == number);
 }
 
 bool BigInteger::operator!=(const BigInteger &big_int) const {
-    return !_equals(*this, big_int);
+    return !(*this == big_int);
 }
 
 bool BigInteger::operator<(int number) const {
-    return _less(*this, BigInteger(number)) && !_equals(*this, BigInteger(number));
+    return _less(*this, BigInteger(number));
 }
 
 bool BigInteger::operator<(const BigInteger &big_int) const {
-    return _less(*this, big_int) && !_equals(*this, big_int);
+    return _less(*this, big_int);
 }
 
 bool BigInteger::operator<=(int number) const {
-    return _less(*this, BigInteger(number)) || _equals(*this, BigInteger(number));
+    return (*this < BigInteger(number)) || (*this == number);
 }
 
 bool BigInteger::operator<=(const BigInteger &big_int) const {
-    return _less(*this, big_int) || _equals(*this, big_int);
+    return (*this < big_int) || (*this == big_int);
 }
 
 bool BigInteger::operator>(int number) const {
-    return !_less(*this, BigInteger(number)) && !_equals(*this, BigInteger(number));
+    return !(*this < number) && (*this != number);
 }
 
 bool BigInteger::operator>(const BigInteger &big_int) const {
-    return !_less(*this, big_int) && !_equals(*this, big_int);
+    return !(*this < big_int) && (*this != big_int);
 }
 
 bool BigInteger::operator>=(int number) const {
-    return !_less(*this, BigInteger(number)) || _equals(*this, BigInteger(number));
+    return !(*this < number) || (*this == number);
 }
 
 bool BigInteger::operator>=(const BigInteger &big_int) const {
-    return !_less(*this, big_int) || _equals(*this, big_int);
+    return !(*this < big_int) || (*this == big_int);
 }
 
 BigInteger::operator int() const {
@@ -188,15 +188,19 @@ BigInteger &BigInteger::operator+=(const BigInteger &big_int) {
     if (_positive == big_int._positive)
         return _add(*this, big_int);
 
-    if (_abs_less(*this, big_int)) {
-        BigInteger temp = big_int;
-        _subtract(temp, *this);
-        *this = temp;
-        _positive = big_int._positive;
-    } else {
-        _subtract(*this, big_int);
-    }
+    BigInteger temp_int(big_int);
+    BigInteger temp_this(*this);
+    temp_int._positive = true;
+    temp_this._positive = true;
 
+    if (temp_this < temp_int) {
+        temp_this = _subtract(temp_int, temp_this);
+        temp_this._positive = !_positive;
+    }
+    else
+        _subtract(temp_this, temp_int);
+
+    *this = temp_this;
     return *this;
 }
 
@@ -207,20 +211,9 @@ BigInteger BigInteger::operator+(const BigInteger &big_int) const {
 }
 
 BigInteger &BigInteger::operator-=(const BigInteger &big_int) {
-    if (_positive == big_int._positive) {
-        if (_abs_less(*this, big_int)) {
-            BigInteger temp = big_int;
-            _subtract(temp, *this);
-            *this = temp;
-            _positive = !big_int._positive;
-        } else {
-            _subtract(*this, big_int);
-        }
-    } else {
-        // If the signs are different, perform addition
-        _add(*this, big_int);
-    }
-    return *this;
+    BigInteger temp(big_int);
+    temp._positive = !temp._positive;
+    return (*this += temp);
 }
 
 BigInteger BigInteger::operator-(const BigInteger &big_int) const {
@@ -230,8 +223,8 @@ BigInteger BigInteger::operator-(const BigInteger &big_int) const {
 }
 
 BigInteger &BigInteger::operator*=(const BigInteger &big_int) {
-    if (big_int._length == 1 && big_int._number_array[0] == 0)
-        *this = BigInteger();
+    if (big_int._is_zero())
+        *this = big_int;
     else
         _multiply(*this, big_int);
 
@@ -340,9 +333,7 @@ BigInteger BigInteger::operator^(int number) const {
  *
  */
 bool BigInteger::_equals(const BigInteger &big_int_1, const BigInteger &big_int_2) {
-    if (big_int_1._positive != big_int_2._positive) return false;
-
-    if (big_int_1._length != big_int_2._length) return false;
+    if (big_int_1._positive != big_int_2._positive || big_int_1._length != big_int_2._length) return false;
 
     for (size_t i = 0; i < big_int_1._length; i++)
         if (big_int_1._number_array[i] != big_int_2._number_array[i]) return false;
@@ -391,17 +382,16 @@ void BigInteger::_assign_integer(int number) {
 }
 
 bool BigInteger::_abs_less(const BigInteger &big_int_1, const BigInteger &big_int_2) {
-    if (big_int_1._length < big_int_2._length) return true;
-    if (big_int_1._length > big_int_2._length) return false;
+    if (big_int_1._length != big_int_2._length) return big_int_1._length < big_int_2._length;
 
     for (size_t i = 0; i < big_int_1._length; i++) {
         size_t index = big_int_1._length - 1 - i;
         int digit_1 = big_int_1._number_array[index];
         int digit_2 = big_int_2._number_array[index];
 
-        if (digit_1 < digit_2) return true;
-        if (digit_1 > digit_2) return false;
+        if (digit_1 != digit_2) return digit_1 < digit_2;
     }
+
     return false;
 }
 
@@ -411,13 +401,10 @@ bool BigInteger::_less(const BigInteger &big_int_1, const BigInteger &big_int_2)
     if (!big_int_1._positive && big_int_2._positive) return true;
     // + && -
     if (big_int_1._positive && !big_int_2._positive) return false;
-
-    bool is_abs_less = _abs_less(big_int_1, big_int_2);
     // + && +
-    if (big_int_1._positive) return is_abs_less;
+    if (big_int_1._positive) return _abs_less(big_int_1, big_int_2);
     // - && -
-    return !is_abs_less;
-
+    return !_abs_less(big_int_1, big_int_2);
 }
 
 bool BigInteger::_is_sign(char character) {
