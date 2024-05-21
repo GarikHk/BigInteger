@@ -36,11 +36,11 @@ BigInteger::BigInteger(const BigInteger &big_int) {
 }
 
 BigInteger::~BigInteger() {
-    if (!_positive)
-        cout << '-';
-    for (int i = (int) _length - 1; i >= 0; i--)
-        cout << _number_array[i];
-    cout << " was destructured!\n";
+//    if (!_positive)
+//        cout << '-';
+//    for (int i = (int) _length - 1; i >= 0; i--)
+//        cout << _number_array[i];
+//    cout << " was destructured!\n";
 }
 
 /**
@@ -60,26 +60,26 @@ BigInteger &BigInteger::operator=(const BigInteger &big_int) {
 }
 
 ostream &operator<<(ostream &out, const BigInteger &big_int) {
-//    if (!big_int._positive) {
-//        out << '-';
-//    }
-//    for (int i = big_int._length - 1; i >= 0; i--) {
-//        out << big_int._number_array[i];
-//    }
-
-    out << "{\n\tnumber: ";
-    if (!big_int._positive)
+    if (!big_int._positive) {
         out << '-';
-    for (int i = (int) big_int._length - 1; i >= 0; i--)
+    }
+    for (int i = (int) big_int._length - 1; i >= 0; i--) {
         out << big_int._number_array[i];
-    out << ",\n\t_positive: "
-        << (big_int._positive ? "true" : "false")
-        << ",\n\t_length: "
-        << big_int._length
-        << ",\n\t_number_array: [";
-    for (int i = 0; i < big_int._length; i++)
-        out << big_int._number_array[i] << (i != big_int._length - 1 ? ", " : "]\n");
-    out << "}\n";
+    }
+
+//    out << "{\n\tnumber: ";
+//    if (!big_int._positive)
+//        out << '-';
+//    for (int i = (int) big_int._length - 1; i >= 0; i--)
+//        out << big_int._number_array[i];
+//    out << ",\n\t_positive: "
+//        << (big_int._positive ? "true" : "false")
+//        << ",\n\t_length: "
+//        << big_int._length
+//        << ",\n\t_number_array: [";
+//    for (int i = 0; i < big_int._length; i++)
+//        out << big_int._number_array[i] << (i != big_int._length - 1 ? ", " : "]\n");
+//    out << "}\n";
 
     return out;
 }
