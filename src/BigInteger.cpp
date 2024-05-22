@@ -23,6 +23,10 @@ BigInteger::BigInteger(int number) {
     _assign_integer(number);
 }
 
+BigInteger::BigInteger(string input) {
+    BigInteger::_assign_string(input, *this);
+}
+
 BigInteger::BigInteger(const int *number_array, size_t length, bool positive = true) {
     _length = length;
     _positive = positive;
@@ -87,27 +91,8 @@ ostream &operator<<(ostream &out, const BigInteger &big_int) {
 istream &operator>>(istream &in, BigInteger &big_int) {
     string input;
     in >> input;
-    size_t end = 0;
-    big_int._length = input.length();
-    big_int._positive = true;
 
-    if (BigInteger::_is_sign(input[end])) {
-        if (input[end] == 45) {
-            big_int._positive = false;
-        }
-        big_int._length--;
-        end++;
-    }
-
-    for (int i = 0; i < big_int._length; i++) {
-        if (!isdigit(input[i + end])) {
-            throw runtime_error("Enter a valid number");
-        }
-
-        int digit = input[i + end] - 48; // Turn the current digit into integer
-        size_t index = big_int._length - 1 - i; // Add the digits from the end
-        big_int._number_array[index] = digit;
-    }
+    BigInteger::_assign_string(input, big_int);
 
     return in;
 }
@@ -196,8 +181,7 @@ BigInteger &BigInteger::operator+=(const BigInteger &big_int) {
     if (temp_this < temp_int) {
         temp_this = _subtract(temp_int, temp_this);
         temp_this._positive = !_positive;
-    }
-    else
+    } else
         _subtract(temp_this, temp_int);
 
     *this = temp_this;
@@ -381,6 +365,27 @@ void BigInteger::_assign_integer(int number) {
     }
 }
 
+void BigInteger::_assign_string(std::string &input, BigInteger &big_int) {
+    size_t end = 0;
+    big_int._length = input.length();
+    big_int._positive = true;
+
+    if (BigInteger::_is_sign(input[end])) {
+        if (input[end] == 45)
+            big_int._positive = false;
+        big_int._length--;
+        end++;
+    }
+
+    for (int i = 0; i < big_int._length; i++) {
+        if (!isdigit(input[i + end]))
+            throw runtime_error("Enter a valid number");
+
+        size_t index = big_int._length - 1 - i;             // Add the digits from the end
+        big_int._number_array[index] = input[i + end] - 48; // Turn the current digit into integer
+    }
+}
+
 bool BigInteger::_abs_less(const BigInteger &big_int_1, const BigInteger &big_int_2) {
     if (big_int_1._length != big_int_2._length) return big_int_1._length < big_int_2._length;
 
@@ -424,17 +429,20 @@ BigInteger &BigInteger::_add(BigInteger &big_int_1, const BigInteger &big_int_2)
     int cargo = 0;
     for (size_t i = 0; i < length; i++) {
         int sum = big_int_1._number_array[i] + big_int_2._number_array[i] + cargo;
-        cargo = 0;
         big_int_1._number_array[i] = sum % 10;
-
-        if (sum / 10 != 0)
-            cargo++;
+        cargo = sum / 10;
     }
 
-    if (cargo > 0) {
-        if (big_int_1._length == MAX) throw runtime_error("Number overflow!");
-        big_int_1._number_array[length] = cargo;
-        big_int_1._length++;
+    while (cargo > 0) {
+        if (length < big_int_1._length) {
+            int sum = big_int_1._number_array[length] + cargo;
+            big_int_1._number_array[length++] = sum % 10;
+            cargo = sum / 10;
+        } else {
+            big_int_1._number_array[length] = cargo;
+            big_int_1._length++;
+            cargo = 0;
+        }
     }
 
     return big_int_1;

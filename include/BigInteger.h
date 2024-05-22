@@ -1,5 +1,8 @@
 #ifndef BIGINTEGER_BIGINTEGER_H
 #define BIGINTEGER_BIGINTEGER_H
+
+#include <string>
+
 #define MAX 100000
 
 class BigInteger {
@@ -11,6 +14,8 @@ public:
     BigInteger();
 
     BigInteger(int number);
+
+    BigInteger(std::string number);
 
     BigInteger(const int *number_array, size_t length, bool positive);
 
@@ -94,6 +99,8 @@ private:
     void _assign_integer(int number);
 
     bool _is_zero() const;
+
+    static void _assign_string(std::string &input, BigInteger &big_int);
 
     static BigInteger &_add(BigInteger &big_int_1, const BigInteger &big_int_2);
 

@@ -32,6 +32,7 @@ int main() {
 
     // Initialize with a string from input
     BigInteger b;
+    std::cout << "Enter a big integer: ";
     std::cin >> b;
 
     // Initialize from an array
